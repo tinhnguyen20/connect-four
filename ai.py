@@ -95,7 +95,7 @@ class MinimaxAgent(Agent):
 
         v = BIG_NUM
         for col in board.getLegalActions():
-            nextBoard = board.simulateMove(col, self.other)
+            nextBoard = board.simulateMove(col, other)
             v = min(v, self.maxVal(nextBoard, depth - 1))
         return v
 
