@@ -2,9 +2,13 @@ PLAYER1 = 'x'
 PLAYER2 = 'o'
 NUM_COLUMNS = 7
 NUM_ROWS = 6
+BIG_NUM = 9999999999
 
 
-def evaluationFunction(board):
+def evaluationFunction(board, player):
+    """
+        Evaluation for board from <player> perspective
+    """
     pass
 
 
@@ -72,6 +76,9 @@ class Agent:
 
 
 class MinimaxAgent(Agent):
+    """
+        ideas learned from cs188 (uc Berkeley)
+    """
     def getMove(self, board):
         d = {}  # holds {value:move}
         for col in board.getLegalActions():
@@ -84,22 +91,23 @@ class MinimaxAgent(Agent):
         other = board.player1 if self.me is board.player2 else board.player2
         winner = board.is_won()
         if winner is not None:
-            return evaluationFunction(board)
+            return evaluationFunction(board, self.me)
 
-        v = 999999999999
+        v = BIG_NUM
         for col in board.getLegalActions():
-            nextBoard = board.simulateMove()
+            nextBoard = board.simulateMove(col, self.other)
+            v = min(v, self.maxVal(nextBoard, depth - 1))
+        return v
 
     def maxVal(self, board, depth):
-        # if d == 0:
-        #   return self.evaluationFunction(state)
-        # if state.isLose() or state.isWin():
-        #   return self.evaluationFunction(state)
-        # # pacman is 0
-        # v = -9999999999
-        # legalMoves = state.getLegalActions(0)
-        # for move in legalMoves:
-        #   successor = state.generateSuccessor(0, move)
-        #   v = max(v, self.minValue(successor, 1, d))
-        # return v
-        pass
+        if depth == 0:
+            return evaluationFunction(board, self.me)
+        winner = board.is_won()
+        if winner is not None:
+            return evaluationFunction(board, self.me)
+        v = -BIG_NUM
+        legalMoves = board.getLegalActions()
+        for move in legalMoves:
+            nextBoard = board.simulateMove(move, self.me)
+            v = max(v, self.minVal(nextBoard, depth))
+        return v
