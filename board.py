@@ -1,9 +1,10 @@
-from ai import Player, ComputerPlayer
+from player import Player, ComputerPlayer
 
-RED_PLAYER = 'x'
-BLUE_PLAYER = 'o'
+PLAYER1 = 'x'
+PLAYER2 = 'o'
 NUM_COLUMNS = 7
 NUM_ROWS = 6
+BIG_NUM = 9999999999
 
 
 class Board():
@@ -31,6 +32,7 @@ class Board():
             self.board = board
         self.player1 = player1
         self.player2 = player2
+        self.winner = None
 
     def simulateMove(self, move, player):
         """
@@ -39,8 +41,11 @@ class Board():
             move - desired column to put piece [0-6]
             player - Player
         """
-        new_board = Board(self.board)
-        new_board.place_piece(move, player)
+        new_board = Board(self.board, player1=self.player1, player2=self.player2)
+        if self.winner is None:
+            new_board.place_piece(move, player)
+            if new_board.is_won() is not None:  # winning move
+                new_board.setWinner(player)
         return new_board
 
     def __str__(self):
@@ -75,12 +80,14 @@ class Board():
             Returns None when no player has won.
             Returns RED_PLAYER/BLUE_PLAYER if they won.
         """
+        if self.winner is not None:
+            return self.winner
         arr = self.to_array()
         # check verticals
         for col in self.board:
-            win = col.has_won_straight()
-            if win:
-                return win
+            winner = col.has_won_straight(self.player1, self.player2)
+            if winner:
+                return winner
         # check horizontals
         for row in range(NUM_ROWS):
             s = ""
@@ -100,13 +107,24 @@ class Board():
 
         return None
 
+    def setWinner(self, winner):
+        self.winner = winner
+
     def place_piece(self, col_num, player):
         """
-            Places piece into the column
+            Places a piece if the current board state doesn't have a winner
+
+            Returns
+                True  - if piece is placed
+                False - there is a winner
         """
         assert col_num >= 0 and col_num < NUM_COLUMNS
         column = self.board[col_num]
-        column.push(player)
+        if self.winner is None:
+            column.push(player)
+            return True
+        else:
+            return False
 
     def populateDiagonals(self):
         """
@@ -164,7 +182,7 @@ class Column():
             s += val
         return s
 
-    def has_won_straight(self):
+    def has_won_straight(self, player1, player2):
         """
             Should not happen. lul.
             Returns None when no player has won.
@@ -173,12 +191,11 @@ class Column():
         s = ""
         for val in self.data:
             s += val
-        if 'bbbb' in s:
-            return BLUE_PLAYER
-        if 'rrrr' in s:
-            return RED_PLAYER
-        else:
-            return None
+        if player1.getWinString() in s:
+            return player1
+        if player2.getWinString() in s:
+            return player2
+        return None
 
 
 def outOfBounds(pos):
@@ -196,8 +213,8 @@ def start_game():
     """
         Use input("Input message.")
     """
-    redPlayer = Player(side=RED_PLAYER)
-    bluePlayer = Player(side=BLUE_PLAYER)
+    redPlayer = Player(side=PLAYER1)
+    bluePlayer = Player(side=PLAYER2)
     board = Board(player1=redPlayer, player2=bluePlayer)
 
     currentPlayer = redPlayer
@@ -205,7 +222,7 @@ def start_game():
         print("")
         print(board)
         currentPlayer.makeMove(board)
-        if currentPlayer.side == RED_PLAYER:
+        if currentPlayer.side == PLAYER1:
             currentPlayer = bluePlayer
         else:
             currentPlayer = redPlayer
@@ -214,4 +231,9 @@ def start_game():
     print(currentPlayer.switch() + " wins!")
 
 
-start_game()
+def start_computer_game():
+    pass
+
+
+if __name__ == '__main__':
+    start_game()
